@@ -1,0 +1,78 @@
+.ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active, a.ui-button:active, .ui-button:active, .ui-button.ui-state-active:hover {
+  background: #B6E0FE;
+  color: initial;
+  border: 1px solid #B6E0FE;
+}
+
+.ui-menu .ui-menu-item-wrapper {
+  color: #333;
+}
+
+.form-planner .form-control:focus {
+  color: #333;
+}
+
+.form-planner .select .form-control {
+  text-overflow: ellipsis;
+}
+
+.form-planner .select-group-secondary {
+  max-width: max-content;
+}
+
+.form-btn:focus {
+  color: #fff;
+}
+
+.form-btn:active {
+  color: hsl(136, 50%, 27%);
+}
+
+svg.loading {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  animation: linear spin 1s;
+  animation-iteration-count: infinite;
+  animation-play-state: running;
+}
+
+@media only screen and (max-width: 991px) {
+  .form-planner .select-group-secondary {
+    max-width: 100%;
+  }
+
+  svg.loading {
+    top: initial;
+    bottom: 7px;
+  }
+}
+
+@-moz-keyframes spin {
+  from {
+    -moz-transform: rotate(0deg);
+  }
+  to {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

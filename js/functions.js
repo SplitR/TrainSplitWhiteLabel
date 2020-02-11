@@ -304,30 +304,34 @@
 		});
 
 		//  Autocomplete
-		$('.field-autocomplete').autocomplete({
-			source: function(request, response) {
-				$.ajax({
-					url: 		'http://api.fastjp.com:9000/api/StationLookup?station=' + request.term,
-					dataType: 	'json',
-					success: 	function(data) {
-						var stations = data.stations;
+		$('.field-autocomplete').each(function () {
+			var field = $(this);
+			$(this).autocomplete({
+				source: function (request, response) {
+					field.parent().find("svg").removeClass("hide");
+					$.ajax({
+						url: 'https://api.fastjp.com:9001/api/StationLookup?station=' + request.term,
+						dataType: 'json',
+						success: function (data) {
+							var stations = data.stations;
+							field.parent().find("svg").addClass("hide");
+							response($.map(stations, function (item) {
+								return {
+									label: item.name,
+									value: item.name,
+									uic: item.uic
+								}
+							}));
+						}
+					});
+				},
+				select: function (event, ui) {
+					var uicNumber = ui.item.uic;
 
-						response($.map(stations, function (item) {
-							return {
-								label: item.name,
-								value: item.name,
-								uic:   item.uic
-							}
-						}));
-					}
-				});
-			},
-			select: function (event, ui) {
-				var uicNumber = ui.item.uic;
-
-				$(this).attr('data-uic', uicNumber);
-			},
-			minLength: 3
+					$(this).attr('data-uic', uicNumber);
+				},
+				minLength: 3
+			});
 		});
 
 		$('.form-toggle-trigger').on('change', function() {
