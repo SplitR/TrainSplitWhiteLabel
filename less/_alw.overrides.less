@@ -39,6 +39,28 @@ svg.loading {
   animation-play-state: running;
 }
 
+.form-btn svg.loading {
+  position: initial;
+  margin-bottom: -2px;
+  vertical-align: baseline;
+  height: 15px;
+  width: 15px;
+  margin-left: 4px;
+
+  .fa-primary, .fa-secondary {
+    fill: #fff;
+  }
+}
+
+.loading .form-group.row, .loading .link-advanced-search {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+body.loading {
+  cursor: wait;
+}
+
 @media only screen and (max-width: 991px) {
   .form-planner .select-group-secondary {
     max-width: 100%;

@@ -333,6 +333,11 @@
 				minLength: 3
 			});
 		});
+		
+		$('.form-planner form').on('submit', function() {
+			$('body').addClass('loading');
+			$('.form-btn').find('svg').removeClass('hide');
+		});
 
 		$('.form-toggle-trigger').on('change', function() {
 			var isChecked = $(this).prop('checked');
