@@ -57,6 +57,11 @@
 		
 		// Set default value in datepickers
 		$('.datepicker').datepicker('setDate', dateToday);
+		
+		// and the default in the departure time picker...
+		var now = new Date();
+		var val = Math.ceil((now.getMinutes()+(now.getHours() * 60)) / 30.0) * 30;
+		document.getElementById("field-departure-time").selectedIndex = val/30;
 
 		// Time Counting 
 		$startTimeSelect.on('change', function() {
