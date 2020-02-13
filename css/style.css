@@ -7238,9 +7238,12 @@ svg.loading {
   fill: #fff;
 }
 .loading .form-group.row,
-.link-advanced-search {
+.loading .link-advanced-search {
   opacity: 0.5;
   pointer-events: none;
+}
+body.loading {
+  cursor: wait;
 }
 @media only screen and (max-width: 991px) {
   .form-planner .select-group-secondary {

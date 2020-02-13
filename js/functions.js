@@ -1,354 +1,373 @@
-;(function($, window, document, undefined) {
-	var $win = $(window);
-	var $doc = $(document);
-	var startHourDefault, startMinutesDefault, nowDate, nowHours, nowMinutes, nowYear, nowMonth, stations;
+;(function ($, window, document, undefined) {
+    var $win = $(window);
+    var $doc = $(document);
+    var startHourDefault, startMinutesDefault, nowDate, nowHours, nowMinutes, nowYear, nowMonth, stations;
 
-	$doc.ready(function() {
-		var dateToday 		= new Date(); 
-		var dateFormat 		= 'dd/mm/yy';
-		var timeDifference 	= 6;
-		var startHour 		= '09:00';
-		var firstStartHours = '06:00';
+    if (!String.prototype.padStart) {
+        String.prototype.padStart = function padStart(targetLength, padString) {
+            targetLength = targetLength >> 0; //truncate if number or convert non-number to 0;
+            padString = String((typeof padString !== 'undefined' ? padString : ' '));
+            if (this.length > targetLength) {
+                return String(this);
+            } else {
+                targetLength = targetLength - this.length;
+                if (targetLength > padString.length) {
+                    padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
+                }
+                return padString.slice(0, targetLength) + String(this);
+            }
+        };
+    }
+
+    $doc.ready(function () {
+        var dateToday = new Date();
+        var dateFormat = 'dd/mm/yy';
+        var timeDifference = 6;
+        var startHour = '09:00';
+        var firstStartHours = '06:00';
 
 
-		var $startTimeSelect 	= $('#field-departure-time');
-		var $endTimeSelect 		= $('#field-return-time');
+        var $startTimeSelect = $('#field-departure-time');
+        var $endTimeSelect = $('#field-return-time');
 
-		nowYear 	= moment().year();
-		nowMonth 	= moment().month();
-		nowDate 	= moment().date();
-		nowHours 	= moment().hour();
-		nowMinutes 	= moment().minutes();
+        nowYear = moment().year();
+        nowMonth = moment().month();
+        nowDate = moment().date();
+        nowHours = moment().hour();
+        nowMinutes = moment().minutes();
 
-		// // Datepicker start date
-		var from = $('#field-outward').datepicker({
-			dateFormat: 		dateFormat,
-			showOn: 			'both',
-			firstDay: 			1,
-			buttonImage: 		'css/images/calendar.png',
-			buttonImageOnly: 	true,
-			buttonText: 		'Select date',
-			minDate: 			dateToday
-		}).on('change', function () {
-			var that = this;
+        // // Datepicker start date
+        var from = $('#field-outward').datepicker({
+            dateFormat: dateFormat,
+            showOn: 'both',
+            firstDay: 1,
+            buttonImage: 'css/images/calendar.png',
+            buttonImageOnly: true,
+            buttonText: 'Select date',
+            minDate: dateToday
+        }).on('change', function () {
+            var that = this;
 
-			to.datepicker('option', 'minDate', getDate(that));
+            to.datepicker('option', 'minDate', getDate(that));
 
-			checkDurationBetweenDates(getDate(that), to.datepicker('getDate', '+1d'));
-		});
+            checkDurationBetweenDates(getDate(that), to.datepicker('getDate', '+1d'));
+        });
 
-		// Datepicker end date
-		var to = $('#field-return').datepicker({
-			dateFormat: 		dateFormat,
-			showOn: 			'both',
-			firstDay: 			1,
-			buttonImage: 		'css/images/calendar.png',
-			buttonImageOnly: 	true,
-			buttonText: 		'Select date',
-			minDate: 			dateToday
+        // Datepicker end date
+        var to = $('#field-return').datepicker({
+            dateFormat: dateFormat,
+            showOn: 'both',
+            firstDay: 1,
+            buttonImage: 'css/images/calendar.png',
+            buttonImageOnly: true,
+            buttonText: 'Select date',
+            minDate: dateToday
 
-		}).on('change', function () {
-			var that = this;
+        }).on('change', function () {
+            var that = this;
 
-			from.datepicker('option', 'maxDate', getDate(that));
+            from.datepicker('option', 'maxDate', getDate(that));
 
-			checkDurationBetweenDates(from.datepicker('getDate', '+1d'), getDate(that));
-		});
-		
-		// Set default value in datepickers
-		$('.datepicker').datepicker('setDate', dateToday);
-		
-		// and the default in the departure time picker...
-		var now = new Date();
-		var val = Math.ceil((now.getMinutes()+(now.getHours() * 60)) / 30.0) * 30;
-		document.getElementById("field-departure-time").selectedIndex = val/30;
+            checkDurationBetweenDates(from.datepicker('getDate', '+1d'), getDate(that));
+        });
 
-		// Time Counting 
-		$startTimeSelect.on('change', function() {
-			var departureValue 		= $(this).find('option:selected').val();
-			var departureMoment 	= moment(departureValue, 'HH:mm');
-			var minReturnMoment 	= departureMoment.add(timeDifference, 'hours').format('HH:mm');
-			var returnMomentMins 	= moment.duration(minReturnMoment).asMinutes();
-			var departureDate 		= $('#field-outward').datepicker('getDate', '+1d');
-			var returnDate 			= $('#field-return').datepicker('getDate', '+1d');
+        // Set default value in datepickers
+        $('.datepicker').datepicker('setDate', dateToday);
 
-			if (moment(departureDate, dateFormat).date() === moment(returnDate, dateFormat).date() && moment(departureDate, dateFormat).month() === moment(returnDate, dateFormat).month() && moment(departureDate, dateFormat).year() === moment(returnDate, dateFormat).year()) {
+        // and the default in the departure time picker...
+        // var now = new Date();
+        // var val = Math.ceil((now.getMinutes()+(now.getHours() * 60)) / 30.0) * 30;
+        // if (val >= 1410) {
+        // 	val = val % 1410;
+        // }
+        // document.getElementById("field-departure-time").selectedIndex = val/30;
 
-				if (returnMomentMins >= 0 && returnMomentMins <= 330) {
-					returnMomentMins = 540;
+        // Time Counting 
+        $startTimeSelect.on('change', function () {
+            var departureValue = $(this).find('option:selected').val();
+            var departureMoment = moment(departureValue, 'HH:mm');
+            var minReturnMoment = departureMoment.add(timeDifference, 'hours').format('HH:mm');
+            var returnMomentMins = moment.duration(minReturnMoment).asMinutes();
+            var departureDate = $('#field-outward').datepicker('getDate', '+1d');
+            var returnDate = $('#field-return').datepicker('getDate', '+1d');
 
-					departureDate.setDate(departureDate.getDate() + 1); 
+            if (moment(departureDate, dateFormat).date() === moment(returnDate, dateFormat).date() && moment(departureDate, dateFormat).month() === moment(returnDate, dateFormat).month() && moment(departureDate, dateFormat).year() === moment(returnDate, dateFormat).year()) {
 
-					$('#field-return').datepicker('setDate', departureDate);
-				} 
-			}
+                if (returnMomentMins >= 0 && returnMomentMins <= 330) {
+                    returnMomentMins = 540;
 
-			// Years
-			var startYear = moment(departureDate, dateFormat).year();
-			var endYear = moment(returnDate, dateFormat).year();
-			
-			// Month
-			var startMonth = moment(departureDate, dateFormat).month();
-			var endMonth = moment(returnDate, dateFormat).month();
-			
-			// Date
-			var startDate = moment(departureDate, dateFormat).date();
-			var endDate = moment(returnDate, dateFormat).date();
+                    departureDate.setDate(departureDate.getDate() + 1);
 
-			var startDateEndDateDiff = (startDate !== endDate && startMonth === endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear !== endYear) || (startDate !== endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear !== endYear);
+                    $('#field-return').datepicker('setDate', departureDate);
+                }
+            }
 
-			if(startDateEndDateDiff) {
-				$endTimeSelect.find('option').prop('disabled', false);
-			} else {
-				$endTimeSelect.find('option').each(function(){
-					var returnValue = $(this).val()
-					var returnValueMoment = moment.duration(returnValue).asMinutes()
-					
-					if (returnValueMoment === returnMomentMins) {
-						$(this).prevAll().prop('disabled', true);
+            // Years
+            var startYear = moment(departureDate, dateFormat).year();
+            var endYear = moment(returnDate, dateFormat).year();
 
-						$(this).prop({
-							'disabled': false,
-							'selected': true
-						}).nextAll().prop('disabled', false);
-					}
-				});
-			}
-		});
+            // Month
+            var startMonth = moment(departureDate, dateFormat).month();
+            var endMonth = moment(returnDate, dateFormat).month();
 
-		// Parse Date Datepicker 
-		function getDate(element) {
-			var date;
-			try {
-				date = $.datepicker.parseDate(dateFormat, element.value);
-			} catch( error ) {
-				date = null;
-			}
-			
-			return date;
-		}
+            // Date
+            var startDate = moment(departureDate, dateFormat).date();
+            var endDate = moment(returnDate, dateFormat).date();
 
-		function checkDurationBetweenDates(start, end) {
-			// Datepicker years
-			var startYear = moment(start, dateFormat).year();
-			var endYear = moment(end, dateFormat).year();
-			
-			// Datepicker month
-			var startMonth = moment(start, dateFormat).month();
-			var endMonth = moment(end, dateFormat).month();
-			
-			// Datepicker Date
-			var startDate = moment(start, dateFormat).date();
-			var endDate = moment(end, dateFormat).date();
+            var startDateEndDateDiff = (startDate !== endDate && startMonth === endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear !== endYear) || (startDate !== endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear !== endYear);
 
-			// Select Start Hour
-			var selectStartValue = $startTimeSelect.find('option:selected').val();
+            if (startDateEndDateDiff) {
+                $endTimeSelect.find('option').prop('disabled', false);
+            } else {
+                $endTimeSelect.find('option').each(function () {
+                    var returnValue = $(this).val()
+                    var returnValueMoment = moment.duration(returnValue).asMinutes()
 
-			// Change End Hour in select
-			var changeEndHourPlusDuration = moment(selectStartValue, 'HH:mm').add(timeDifference, 'hours').format('HH:mm');
-			var changeEndHour = moment(startHour, 'HH:mm').add(timeDifference, 'hours').format('HH:mm');
+                    if (returnValueMoment === returnMomentMins) {
+                        $(this).prevAll().prop('disabled', true);
 
-			var currentSelectValues = setHoursDuration(nowMinutes, nowHours);
+                        $(this).prop({
+                            'disabled': false,
+                            'selected': true
+                        }).nextAll().prop('disabled', false);
+                    }
+                });
+            }
+        });
 
-			var startDateEndDateDiff = (startDate !== endDate && startMonth === endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear !== endYear) || (startDate !== endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear !== endYear);
+        // Parse Date Datepicker 
+        function getDate(element) {
+            var date;
+            try {
+                date = $.datepicker.parseDate(dateFormat, element.value);
+            } catch (error) {
+                date = null;
+            }
 
-			var startDateNowDateDiff = (nowDate !== startDate && nowMonth === startMonth && nowYear === startYear) || (nowDate === startDate && nowMonth !== startMonth && nowYear === startYear) || (nowDate === startDate && nowMonth === startMonth && nowYear !== startYear) || (nowDate !== startDate && nowMonth !== startMonth && nowYear === startYear) || (nowDate === startDate && nowMonth !== startMonth && nowYear !== startYear) || (nowDate !== startDate && nowMonth === startMonth && nowYear !== startYear) || (nowDate !== startDate && nowMonth !== startMonth && nowYear !== startYear);
+            return date;
+        }
 
-			var endDateNowDateDiff = (nowDate !== endDate && nowMonth === endMonth && nowYear === endYear) || (nowDate === endDate && nowMonth !== endMonth && nowYear === endYear) || (nowDate === endDate && nowMonth === endMonth && nowYear !== endYear) || (nowDate !== endDate && nowMonth !== endMonth && nowYear === endYear) || (nowDate === endDate && nowMonth !== endMonth && nowYear !== endYear) || (nowDate !== endDate && nowMonth === endMonth && nowYear !== endYear) || (nowDate !== endDate && nowMonth !== endMonth && nowYear !== endYear);
+        function checkDurationBetweenDates(start, end) {
+            // Datepicker years
+            var startYear = moment(start, dateFormat).year();
+            var endYear = moment(end, dateFormat).year();
 
-			var startDateEndDateEqual = startDate === endDate && startMonth === endMonth && startYear === endYear;
+            // Datepicker month
+            var startMonth = moment(start, dateFormat).month();
+            var endMonth = moment(end, dateFormat).month();
 
-			var startDateNowDateEqual = startDate === nowDate && startMonth === nowMonth && startYear === nowYear;
+            // Datepicker Date
+            var startDate = moment(start, dateFormat).date();
+            var endDate = moment(end, dateFormat).date();
 
-			var endDateNowDateEqual = endDate === nowDate && endMonth === nowMonth && endYear === nowYear;
+            // Select Start Hour
+            var selectStartValue = $startTimeSelect.find('option:selected').val();
 
-			if(startDateEndDateDiff && endDateNowDateDiff && startDateNowDateDiff) {
-				$startTimeSelect.find('option[value="' + firstStartHours + '"]')
-					.prop({
-						'disabled': false,
-						'selected': true
-					})
-					.siblings().prop('disabled', false);	
+            // Change End Hour in select
+            var changeEndHourPlusDuration = moment(selectStartValue, 'HH:mm').add(timeDifference, 'hours').format('HH:mm');
+            var changeEndHour = moment(startHour, 'HH:mm').add(timeDifference, 'hours').format('HH:mm');
 
-				$endTimeSelect.find('option[value="' + firstStartHours + '"]')
-					.prop({
-						'disabled': false,
-						'selected': true
-					})
-					.siblings().prop('disabled', false);	
+            var currentSelectValues = setHoursDuration(nowMinutes, nowHours);
 
-			} else if (startDateEndDateEqual && endDateNowDateDiff && startDateNowDateDiff) {
-				$startTimeSelect.find('option[value="' + firstStartHours + '"]')
-					.prop({
-						'disabled': false,
-						'selected': true
-					})
-					.siblings().prop('disabled', false);	
+            var startDateEndDateDiff = (startDate !== endDate && startMonth === endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear === endYear) || (startDate === endDate && startMonth !== endMonth && startYear !== endYear) || (startDate !== endDate && startMonth === endMonth && startYear !== endYear) || (startDate !== endDate && startMonth !== endMonth && startYear !== endYear);
 
-				$endTimeSelect.find('option[value="' + moment(firstStartHours, 'HH:mm').add(timeDifference, 'hours').format('HH:mm') + '"]')
-					.prop({
-						'disabled': false,
-						'selected': true
-					})
-					.nextAll().prop('disabled', false);
+            var startDateNowDateDiff = (nowDate !== startDate && nowMonth === startMonth && nowYear === startYear) || (nowDate === startDate && nowMonth !== startMonth && nowYear === startYear) || (nowDate === startDate && nowMonth === startMonth && nowYear !== startYear) || (nowDate !== startDate && nowMonth !== startMonth && nowYear === startYear) || (nowDate === startDate && nowMonth !== startMonth && nowYear !== startYear) || (nowDate !== startDate && nowMonth === startMonth && nowYear !== startYear) || (nowDate !== startDate && nowMonth !== startMonth && nowYear !== startYear);
 
-				$endTimeSelect.find('option[value="' + moment(firstStartHours, 'HH:mm').add(timeDifference, 'hours').format('HH:mm') + '"]')	
-					.prop({
-						'disabled': false,
-						'selected': true
-					}).prevAll().prop('disabled', true);
+            var endDateNowDateDiff = (nowDate !== endDate && nowMonth === endMonth && nowYear === endYear) || (nowDate === endDate && nowMonth !== endMonth && nowYear === endYear) || (nowDate === endDate && nowMonth === endMonth && nowYear !== endYear) || (nowDate !== endDate && nowMonth !== endMonth && nowYear === endYear) || (nowDate === endDate && nowMonth !== endMonth && nowYear !== endYear) || (nowDate !== endDate && nowMonth === endMonth && nowYear !== endYear) || (nowDate !== endDate && nowMonth !== endMonth && nowYear !== endYear);
 
-			} else if(startDateNowDateEqual && endDateNowDateDiff && startDateEndDateDiff) {
-				$startTimeSelect.find('option[value="' + currentSelectValues[0] + '"]')
-					.prop('selected', 'selected')
-					.prevAll().prop('disabled', true);
+            var startDateEndDateEqual = startDate === endDate && startMonth === endMonth && startYear === endYear;
 
-				$endTimeSelect.find('option[value="' + firstStartHours + '"]')
-					.prop({
-						'disabled': false,
-						'selected': true
-					})
-					.siblings().prop('disabled', false);
+            var startDateNowDateEqual = startDate === nowDate && startMonth === nowMonth && startYear === nowYear;
 
-			} else if(startDateNowDateEqual && endDateNowDateEqual) {
-				$startTimeSelect.find('option[value="' + currentSelectValues[0] + '"]').prop('selected', 'selected')
-					.prevAll().prop('disabled', true);
+            var endDateNowDateEqual = endDate === nowDate && endMonth === nowMonth && endYear === nowYear;
 
-				$endTimeSelect.find('option[value="' + currentSelectValues[1] + '"]').prop('selected', 'selected')
-					.prevAll().prop('disabled', true);
-			
-			}
-		}
+            if (startDateEndDateDiff && endDateNowDateDiff && startDateNowDateDiff) {
+                $startTimeSelect.find('option[value="' + firstStartHours + '"]')
+                    .prop({
+                        'disabled': false,
+                        'selected': true
+                    })
+                    .siblings().prop('disabled', false);
 
-		function setValues(date) {
-			startHourDefault = moment(date, dateFormat).hour();
-			startMinutesDefault = moment(date, dateFormat).minutes();
+                $endTimeSelect.find('option[value="' + firstStartHours + '"]')
+                    .prop({
+                        'disabled': false,
+                        'selected': true
+                    })
+                    .siblings().prop('disabled', false);
 
-			var startDate 	= moment(from.datepicker('getDate', '+1d'), dateFormat).date();
-			var endDate 	= moment(to.datepicker('getDate', '+1d'), dateFormat).date();
+            } else if (startDateEndDateEqual && endDateNowDateDiff && startDateNowDateDiff) {
+                $startTimeSelect.find('option[value="' + firstStartHours + '"]')
+                    .prop({
+                        'disabled': false,
+                        'selected': true
+                    })
+                    .siblings().prop('disabled', false);
 
-			if(nowDate === startDate && nowDate === endDate) {
-				var currentHours = setHoursDuration(startMinutesDefault, startHourDefault);
+                $endTimeSelect.find('option[value="' + moment(firstStartHours, 'HH:mm').add(timeDifference, 'hours').format('HH:mm') + '"]')
+                    .prop({
+                        'disabled': false,
+                        'selected': true
+                    })
+                    .nextAll().prop('disabled', false);
 
-				$startTimeSelect.find('option[value="' + currentHours[0] + '"]').prop('selected', 'selected')
-					.prevAll().prop('disabled', true);
+                $endTimeSelect.find('option[value="' + moment(firstStartHours, 'HH:mm').add(timeDifference, 'hours').format('HH:mm') + '"]')
+                    .prop({
+                        'disabled': false,
+                        'selected': true
+                    }).prevAll().prop('disabled', true);
 
-				$endTimeSelect.find('option[value="' + currentHours[1] + '"]').prop('selected', 'selected')
-					.prevAll().prop('disabled', true);
-			} else {
-				$startTimeSelect.find('option[value="'+ startHour +'"]')
-					.prop({
-						'disabled': false,
-						'selected': true
+            } else if (startDateNowDateEqual && endDateNowDateDiff && startDateEndDateDiff) {
+                $startTimeSelect.find('option[value="' + currentSelectValues[0] + '"]')
+                    .prop('selected', 'selected')
+                    .prevAll().prop('disabled', true);
 
-					})
-					.nextAll().prop('disabled', false);
-			}
-		}
+                $endTimeSelect.find('option[value="' + firstStartHours + '"]')
+                    .prop({
+                        'disabled': false,
+                        'selected': true
+                    })
+                    .siblings().prop('disabled', false);
 
-		function setHoursDuration(startMinutesDefault, startHourDefault) {
-			if(startMinutesDefault < 30) {
-				startMinutesDefault = '30';
-				startHourDefault += 1;
-			} else {
-				startMinutesDefault = '00';
-				startHourDefault += 2;
-			} 
+            } else if (startDateNowDateEqual && endDateNowDateEqual) {
+                $startTimeSelect.find('option[value="' + currentSelectValues[0] + '"]').prop('selected', 'selected')
+                    .prevAll().prop('disabled', true);
 
-			if(startHourDefault + timeDifference >= 24) {
-				// startHourDefault = '09';
-				startMinutesDefault = '00';
-				
-				var newDate = $('#field-outward').datepicker('getDate', '+1d');
-				newDate.setDate(newDate.getDate() + 1);
-				
-				// $('#field-return').datepicker('setDate', newDate);
+                $endTimeSelect.find('option[value="' + currentSelectValues[1] + '"]').prop('selected', 'selected')
+                    .prevAll().prop('disabled', true);
 
-				return [startHourDefault + ':' + startMinutesDefault, startHourDefault + ':' + startMinutesDefault];
-			} else {
-				return [startHourDefault + ':' + startMinutesDefault, startHourDefault + timeDifference + ':' + startMinutesDefault];
-			}
-		}
+            }
+        }
 
-		setValues(dateToday);
+        function setValues(date) {
+            startHourDefault = moment(date, dateFormat).hour();
+            startMinutesDefault = moment(date, dateFormat).minutes();
 
-		var maxNumberPeople = 8;
-		var $selectAdult = $('#field-adult');
-		var $selectChild = $('#field-child');
+            var startDate = moment(from.datepicker('getDate', '+1d'), dateFormat).date();
+            var endDate = moment(to.datepicker('getDate', '+1d'), dateFormat).date();
 
-		$selectAdult.on('change', function () {
-			var currentValue = $(this).val();
+            if (nowDate === startDate && nowDate === endDate) {
+                var currentHours = setHoursDuration(startMinutesDefault, startHourDefault);
 
-			var currentIndex = maxNumberPeople - currentValue - 1;
-			var $currentOption = $selectChild.prop('disabled', false).find('option').eq(currentIndex + 1);
+                $startTimeSelect.find('option[value="' + currentHours[0] + '"]').prop('selected', 'selected')
+                    .prevAll().prop('disabled', true);
 
-			if(currentIndex < 0) {
-				$selectChild.prop('disabled', true);
-			} else {
-				$currentOption.prop('disabled', false);
-				$currentOption.prevAll().prop('disabled', false);
-				$currentOption.nextAll().prop('disabled', true);
-			}
-		});
+                $endTimeSelect.find('option[value="' + currentHours[1] + '"]').prop('selected', 'selected')
+                    .prevAll().prop('disabled', true);
+            } else {
+                $startTimeSelect.find('option[value="' + startHour + '"]')
+                    .prop({
+                        'disabled': false,
+                        'selected': true
 
-		$selectChild.on('change', function () {
-			var currentValue = $(this).val();
+                    })
+                    .nextAll().prop('disabled', false);
+            }
+        }
 
-			var currentIndex = maxNumberPeople - currentValue - 1;
-			var $currentOption = $selectAdult.prop('disabled', false).find('option').eq(currentIndex);
+        function setHoursDuration(startMinutesDefault, startHourDefault) {
+            if (startMinutesDefault < 30) {
+                startMinutesDefault = '30';
+                startHourDefault += 1;
+            } else {
+                startMinutesDefault = '00';
+                startHourDefault += 2;
+            }
 
-			if(currentIndex < 0) {
-				$selectAdult.prop('disabled', true);
-			} else if(currentIndex === 7) {	
-				$selectAdult.find('option').prop('disabled', false);
-			} else {
-				$currentOption.prop('disabled', false);
-				$currentOption.prevAll().prop('disabled', false);
-				$currentOption.nextAll().prop('disabled', true);
-			}
-		});
+            if (startHourDefault + timeDifference >= 24) {
+                // startHourDefault = '09';
+                startMinutesDefault = '00';
 
-		//  Autocomplete
-		$('.field-autocomplete').each(function () {
-			var field = $(this);
-			$(this).autocomplete({
-				source: function (request, response) {
-					field.parent().find("svg").removeClass("hide");
-					$.ajax({
-						url: 'https://api.fastjp.com:9001/api/StationLookup?station=' + request.term,
-						dataType: 'json',
-						success: function (data) {
-							var stations = data.stations;
-							field.parent().find("svg").addClass("hide");
-							response($.map(stations, function (item) {
-								return {
-									label: item.name,
-									value: item.name,
-									uic: item.uic
-								}
-							}));
-						}
-					});
-				},
-				select: function (event, ui) {
-					var uicNumber = ui.item.uic;
+                var newDate = $('#field-outward').datepicker('getDate', '+1d');
+                newDate.setDate(newDate.getDate() + 1);
 
-					$(this).attr('data-uic', uicNumber);
-				},
-				minLength: 3
-			});
-		});
-		
-		$('.form-planner form').on('submit', function() {
-			$('body').addClass('loading');
-			$('.form-btn').find('svg').removeClass('hide');
-		});
+                $('#field-return').datepicker('setDate', newDate);
 
-		$('.form-toggle-trigger').on('change', function() {
-			var isChecked = $(this).prop('checked');
+                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, (startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault];
+            } else {
+                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, ((startHourDefault+"") + timeDifference + "").padStart(2, "0") + ':' + startMinutesDefault];
+            }
+        }
 
-			$('.form-toggle-row').slideToggle(isChecked)
-				.find('input, select').prop('disabled', !isChecked);
-		});
-	});
+        setValues(dateToday);
+
+        var maxNumberPeople = 8;
+        var $selectAdult = $('#field-adult');
+        var $selectChild = $('#field-child');
+
+        $selectAdult.on('change', function () {
+            var currentValue = $(this).val();
+
+            var currentIndex = maxNumberPeople - currentValue - 1;
+            var $currentOption = $selectChild.prop('disabled', false).find('option').eq(currentIndex + 1);
+
+            if (currentIndex < 0) {
+                $selectChild.prop('disabled', true);
+            } else {
+                $currentOption.prop('disabled', false);
+                $currentOption.prevAll().prop('disabled', false);
+                $currentOption.nextAll().prop('disabled', true);
+            }
+        });
+
+        $selectChild.on('change', function () {
+            var currentValue = $(this).val();
+
+            var currentIndex = maxNumberPeople - currentValue - 1;
+            var $currentOption = $selectAdult.prop('disabled', false).find('option').eq(currentIndex);
+
+            if (currentIndex < 0) {
+                $selectAdult.prop('disabled', true);
+            } else if (currentIndex === 7) {
+                $selectAdult.find('option').prop('disabled', false);
+            } else {
+                $currentOption.prop('disabled', false);
+                $currentOption.prevAll().prop('disabled', false);
+                $currentOption.nextAll().prop('disabled', true);
+            }
+        });
+
+        //  Autocomplete
+        $('.field-autocomplete').each(function () {
+            var field = $(this);
+            $(this).autocomplete({
+                source: function (request, response) {
+                    field.parent().find("svg").removeClass("hide");
+                    $.ajax({
+                        url: 'https://api.fastjp.com:9001/api/StationLookup?station=' + request.term,
+                        dataType: 'json',
+                        success: function (data) {
+                            var stations = data.stations;
+                            field.parent().find("svg").addClass("hide");
+                            response($.map(stations, function (item) {
+                                return {
+                                    label: item.name,
+                                    value: item.name,
+                                    uic: item.uic
+                                }
+                            }));
+                        }
+                    });
+                },
+                select: function (event, ui) {
+                    var uicNumber = ui.item.uic;
+
+                    $(this).attr('data-uic', uicNumber);
+                },
+                minLength: 3
+            });
+        });
+
+        $('.form-planner form').on('submit', function () {
+            $('body').addClass('loading');
+            $('.form-btn').find('svg').removeClass('hide');
+        });
+
+        $('.form-toggle-trigger').on('change', function () {
+            var isChecked = $(this).prop('checked');
+
+            $('.form-toggle-row').slideToggle(isChecked)
+                .find('input, select').prop('disabled', !isChecked);
+        });
+    });
 })(jQuery, window, document);
