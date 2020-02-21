@@ -19,10 +19,23 @@
         };
     }
 
+    function showReturnJourneyFormIfAppropriate() {
+        var isChecked = $('#book_return').prop('checked');
+
+        var $formToggleRow = $('.form-toggle-row');
+        if (isChecked) {
+            $formToggleRow.slideDown();
+        } else {
+            $formToggleRow.slideUp();
+        }
+
+        $formToggleRow.find('input, select').prop('disabled', !isChecked);
+    }
+
     $doc.ready(function () {
         var dateToday = new Date();
         var dateFormat = 'dd/mm/yy';
-        var timeDifference = 6;
+        var timeDifference = 1;
         var startHour = '09:00';
         var firstStartHours = '06:00';
 
@@ -287,9 +300,10 @@
                 startMinutesDefault = '00';
                 $('#field-return').datepicker('setDate', newDate);
 
-                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, ((startHourDefault+"")+timeDifference).padStart(2, "0") + ':' + startMinutesDefault];
+                var returnHours = ((startHourDefault+timeDifference) % 24)+"";
+                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, (returnHours).padStart(2, "0") + ':' + startMinutesDefault];
             } else {
-                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, ((startHourDefault+"") + timeDifference + "").padStart(2, "0") + ':' + startMinutesDefault];
+                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, ((startHourDefault+timeDifference) + "").padStart(2, "0") + ':' + startMinutesDefault];
             }
         }
 
@@ -367,11 +381,7 @@
             $('.form-btn').find('svg').removeClass('hide');
         });
 
-        $('.form-toggle-trigger').on('change', function () {
-            var isChecked = $(this).prop('checked');
-
-            $('.form-toggle-row').slideToggle(isChecked)
-                .find('input, select').prop('disabled', !isChecked);
-        });
+        $('.form-toggle-trigger').on('change', showReturnJourneyFormIfAppropriate);
+        showReturnJourneyFormIfAppropriate(); // browser may cache ticked checkbox
     });
 })(jQuery, window, document);
