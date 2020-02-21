@@ -268,22 +268,26 @@
         function setHoursDuration(startMinutesDefault, startHourDefault) {
             if (startMinutesDefault < 30) {
                 startMinutesDefault = '30';
-                startHourDefault += 1;
             } else {
                 startMinutesDefault = '00';
-                startHourDefault += 2;
+                startHourDefault += 1;
             }
 
-            if (startHourDefault + timeDifference >= 24) {
+            var newDate = $('#field-outward').datepicker('getDate');
+            newDate.setDate(newDate.getDate() + 1);
+            var originalStartHour = startHourDefault;
+            if (startHourDefault >= 24) {
+                startHourDefault = startHourDefault % 24;
+                $('#field-outward').datepicker('setDate', newDate);
+
+            }
+
+            if (originalStartHour + timeDifference >= 24) {
                 // startHourDefault = '09';
                 startMinutesDefault = '00';
-
-                var newDate = $('#field-outward').datepicker('getDate', '+1d');
-                newDate.setDate(newDate.getDate() + 1);
-
                 $('#field-return').datepicker('setDate', newDate);
 
-                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, (startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault];
+                return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, ((startHourDefault+"")+timeDifference).padStart(2, "0") + ':' + startMinutesDefault];
             } else {
                 return [(startHourDefault+"").padStart(2, "0") + ':' + startMinutesDefault, ((startHourDefault+"") + timeDifference + "").padStart(2, "0") + ':' + startMinutesDefault];
             }
